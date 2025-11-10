@@ -23,7 +23,7 @@ public class UserController {
         model.addAttribute("user", new User());
         model.addAttribute("contentPage", "/WEB-INF/views/pages/register.jsp");
         model.addAttribute("pageTitle", "Register");
-        return "register";
+        return "layout.layout";
     }
 
     @PostMapping("/register")
