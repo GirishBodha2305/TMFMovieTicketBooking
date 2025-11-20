@@ -1,5 +1,6 @@
 package com.sat.tmf.movietkt.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,12 +14,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.sat.tmf.movietkt.entities.Movie;
+import com.sat.tmf.movietkt.entities.MovieReview;
 import com.sat.tmf.movietkt.entities.Show;
+import com.sat.tmf.movietkt.service.MovieReviewService;
 import com.sat.tmf.movietkt.service.MovieService;
 import com.sat.tmf.movietkt.service.ShowService;
 
+import jakarta.servlet.http.HttpSession;
+
+
+
 @Controller
-@RequestMapping("/admin/movies")
+
 public class MovieController {
 
     @Autowired
@@ -26,9 +33,10 @@ public class MovieController {
     
     @Autowired
     private ShowService showService;
-
+    /* ------------------ ADMIN MOVIE MANAGEMENT ------------------ */
+    
     // List all movies
-    @GetMapping
+    @GetMapping("/admin/movies")
     public String listMovies(Model model, @RequestParam(required = false) String search) {
         List<Movie> movies;
         if (search != null && !search.isEmpty()) {
@@ -44,7 +52,7 @@ public class MovieController {
     }
 
     // Show form to add a movie
-    @GetMapping("/add")
+    @GetMapping("/admin/movies/add")
     public String showAddForm(Model model) {
         model.addAttribute("movie", new Movie());
         model.addAttribute("contentPage", "/WEB-INF/views/admin/addMovie.jsp");
@@ -53,14 +61,14 @@ public class MovieController {
     }
 
     // Save new movie
-    @PostMapping("/add")
+    @PostMapping("/admin/movies/add")
     public String addMovie(@ModelAttribute Movie movie) {
         movieService.addMovie(movie);
         return "redirect:/admin/movies";
     }
 
     // Edit movie form
-    @GetMapping("/edit/{id}")
+    @GetMapping("/admin/movies/edit/{id}")
     public String editMovie(@PathVariable Integer id, Model model) {
         Movie movie = movieService.findById(id);
         model.addAttribute("movie", movie);
@@ -70,7 +78,7 @@ public class MovieController {
     }
 
     // Delete movie
-    @GetMapping("/delete/{id}")
+    @GetMapping("/admin/movies/delete/{id}")
     public String deleteMovie(@PathVariable Integer id) {
         movieService.deleteMovie(id);
         return "redirect:/admin/movies";
@@ -98,15 +106,60 @@ public class MovieController {
     }
 
     @GetMapping("/movies/{id}/shows")
+  
     public String listShowsForMovie(@PathVariable Integer id, Model model) {
         Movie movie = movieService.findById(id);
         List<Show> shows = showService.findUpcomingShows(movie);
+        
         model.addAttribute("movie", movie);
         model.addAttribute("shows", shows);
         model.addAttribute("contentPage", "/WEB-INF/views/user/movieShows.jsp");
         model.addAttribute("pageTitle", movie.getTitle() + " - Showtimes");
+        System.out.println("Movie: " + movie);
+        System.out.println("Shows size: " + shows.size());
         return "layout/layout";
     }
+    @GetMapping("/movies/search")
+    public String searchMoviesGet(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String language,
+            Model model) {
+
+        List<Movie> movies;
+
+        // Check if city and date are provided
+        if ((city != null && !city.isBlank()) && (date != null && !date.isBlank())) {
+            // Use the same service method as your POST mapping
+            movies = movieService.findMoviesByCityDateLanguage(
+                    city,
+                    date,
+                    (language != null && !language.isBlank()) ? language : null
+            );
+        } else {
+            // If no city/date provided, show all movies
+            movies = movieService.findAllMovies();
+        }
+
+        // Add attributes to the model for the JSP
+        model.addAttribute("movies", movies);
+        model.addAttribute("city", city);
+        model.addAttribute("date", date);
+        model.addAttribute("language", language);
+        model.addAttribute("contentPage", "/WEB-INF/views/searchMovies.jsp");
+        model.addAttribute("pageTitle", "Search Movies");
+
+        return "layout/layout";
+    }
+
+    @Autowired
+    private MovieReviewService reviewService;
+
+
+  
+
+
+
 
 }
 

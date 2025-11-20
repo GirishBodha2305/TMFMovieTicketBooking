@@ -2,6 +2,8 @@ package com.sat.tmf.movietkt.dao;
 
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import com.sat.tmf.movietkt.entities.User;
@@ -15,9 +17,11 @@ import java.util.List;
 @Repository
 public class UserDao extends GenericDao<User, Integer> {
 
+
     public UserDao() {
         super(User.class);
     }
+
 
     /**
      * Find a user by username.
@@ -60,11 +64,36 @@ public class UserDao extends GenericDao<User, Integer> {
      * @param password plain password (compare encoded in service)
      * @return matching User or null
      */
-    public User authenticate(String username, String password) {
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public User authenticate(String username, String rawPassword) {
+
         Session session = getSession();
-        Query<User> query = session.createQuery("from User where username = :uname and password = :pwd", User.class);
+
+        // 1. Fetch user
+        Query<User> query = session.createQuery(
+                "from User where username = :uname",
+                User.class
+        );
         query.setParameter("uname", username);
-        query.setParameter("pwd", password);
-        return query.uniqueResult();
+
+        User user = query.uniqueResult();
+
+        // Debugging log (correct place)
+        System.out.println("USERNAME FOUND? " + (user != null));
+        if (user != null) {
+            System.out.println("RAW PW = " + rawPassword);
+            System.out.println("DB HASH = " + user.getPassword());
+            System.out.println("MATCHES = " + passwordEncoder.matches(rawPassword, user.getPassword()));
+        }
+
+        // Compare
+        if (user != null && passwordEncoder.matches(rawPassword, user.getPassword())) {
+            return user;
+        }
+
+        return null;
     }
+
+
 }

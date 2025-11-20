@@ -18,7 +18,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="${pageContext.request.contextPath}/register">
+            <a class="nav-link" href="${pageContext.request.contextPath}/user/register">
               <i class="fa fa-user-plus"></i> Register
             </a>
           </li>
@@ -32,7 +32,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="${pageContext.request.contextPath}/user/bookings">
+            <a class="nav-link" href="${pageContext.request.contextPath}/booking/history">
               <i class="fa fa-ticket-alt"></i> My Bookings
             </a>
           </li>
